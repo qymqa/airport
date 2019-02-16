@@ -1,0 +1,312 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.9"></script>
+
+    <title>Табло аэропорта города Уфы</title>
+
+    <style>
+        html {
+            height: 100%
+        }
+        
+        body {
+            height: 100%;
+        }
+        
+        section {
+            width: 100%;
+            height: 100%;
+            background: url(plane-png.png) no-repeat bottom left;
+        }
+        
+        .search {
+            width: 100%;
+            height: 80px;
+            font-size: 40px;
+            border: 0;
+            background: none;
+            float: left;
+            border: 5px solid #eee;
+            padding: 10px;
+            border-top: 0;
+            border-bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        
+        .top {
+            width: 100%;
+            min-height: 80px;
+            line-height: 80px;
+            text-align: center;
+            float: left;
+        }
+        
+        .top h1 {
+            line-height: 80px;
+        }
+        
+        *:focus {
+            outline: none!important;
+            box-shadow: 0 0 0 0!important;
+        }
+        
+        .active {
+            background-color: #454d55!important;
+        }
+        
+        .from {
+            border: 5px solid #eee !important;
+            border-radius: 0 !important;
+        }
+        
+        .to {
+            border: 5px solid #eee !important;
+            border-radius: 0 !important;
+            border-left: 0!important;
+            height: 80px !important;
+        }
+        
+        #result {
+            text-align: center;
+            padding-bottom: 50px;
+            padding: 0;
+        }
+        
+        .block-f-t {
+            background: #fff;
+        }
+        
+        .block-day {
+            border-radius: .3rem .3rem 0 0;
+            background: #fff;
+        }
+        
+        .day:nth-child(2n+1) {
+            border-radius: 0!important;
+            border: 5px solid #eee!important;
+        }
+        
+        .day:nth-child(2n) {
+            border: 5px solid #eee!important;
+            border-left: 0!important;
+            border-right: 0!important;
+        }
+        
+        @media screen and (max-width: 720px) {
+            .company {
+                display: none;
+            }
+            .search {
+                font-size: 20px;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <section>
+
+        <div class="top">
+            <h1>АЭРОПОРТ ГОРОДА УФЫ</h1></div>
+
+        <div class="container" id="result">
+
+            <div class="btn-group btn-group-lg btn-block block-f-t" role="group">
+
+                <button type="button" class="btn btn-outline-secondary from" onclick="o=1;go();">Прибытие</button>
+                <button type="button" class="btn btn-outline-secondary to" onclick="o=0;go()">Отправление</button>
+
+            </div>
+
+            <input class="search" placeholder="" onkeyup="search()" autofocus/>
+
+            <div class="btn-group btn-group-lg btn-block block-day" role="group">
+                <button type="button" class="btn btn-outline-secondary day" onclick="t=0;go();">Вчера</button>
+                <button type="button" class="btn btn-outline-secondary  day" onclick="t=1;go();">Сегодня</button>
+                <button type="button" class="btn btn-outline-secondary day" onclick="t=2;go();">Завтра</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Время</th>
+                            <th scope="col">Рейс</th>
+                            <th scope="col" class="destination">Куда</th>
+                            <th scope="col" class='company'>Авиакомпания</th>
+                            <th scope="col">Статус</th>
+                            <th scope="col">Терминал</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script>
+    var options = {
+        strings: ["Москва", "FV-6413", "УФА", ""],
+        typeSpeed: 40
+    }
+
+    var typed = new Typed(".search", options);
+
+    setTimeout(function() {
+        document.getElementsByClassName('search')[0].setAttribute('placeholder', 'Введите рейс или город...')
+    }, 3500);
+
+    var resp;
+
+    var o = 0;
+
+    var t = 1;
+
+    var l = 0;
+
+    function go() {
+
+        document.getElementsByClassName('to')[0].classList.remove('active');
+        document.getElementsByClassName('from')[0].classList.remove('active');
+
+        if (o == 1) {
+
+            document.getElementsByClassName('from')[0].classList.add('active');
+
+        } else {
+
+            document.getElementsByClassName('to')[0].classList.add('active');
+
+        }
+
+        for (i = 0; i < 3; i++) {
+
+            document.getElementsByClassName('day')[i].classList.remove('active')
+
+        }
+
+        if (t == 0) {
+
+            document.getElementsByClassName('day')[0].classList.add('active')
+
+        } else if (t == 1) {
+
+            document.getElementsByClassName('day')[1].classList.add('active')
+
+        } else {
+
+            document.getElementsByClassName('day')[2].classList.add('active')
+
+        }
+
+        var settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": "https://cors-anywhere.herokuapp.com/http://www.airportufa.ru/regularFlight/read?day=" + t + "&operation=" + o + "&limit=" + l + "",
+            "method": "GET",
+            "headers": {}
+        }
+
+        $.ajax(settings).done(function(response) {
+
+            console.log(JSON.parse(response));
+
+            document.getElementById('tbody').innerHTML = '';
+
+            for (i = 0; i < JSON.parse(response).length; i++) {
+
+                if (o == 0) {
+
+                    document.getElementsByClassName('destination')[0].innerHTML = 'Куда'
+
+                    if (JSON.parse(response)[i].status_ru == "Задержка") {
+
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].direction_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td class='text-warning'>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+
+                    } else if (JSON.parse(response)[i].status_ru == "Прилетел") {
+
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].direction_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td class='text-success'>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+
+                    } else {
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].direction_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+                    }
+                } else {
+
+                    document.getElementsByClassName('destination')[0].innerHTML = 'Откуда'
+
+                    if (JSON.parse(response)[i].status_ru == "Задержка") {
+
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].airport_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td class='text-warning'>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+
+                    } else if (JSON.parse(response)[i].status_ru == "Прилетел") {
+
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].airport_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td class='text-success'>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+
+                    } else {
+                        document.getElementById('tbody').innerHTML += "<tr><td>" + JSON.parse(response)[i].time + "</td><td>" + JSON.parse(response)[i].flight_number + "</td><td>" + JSON.parse(response)[i].airport_ru + "</td><td class='company'>" + JSON.parse(response)[i].aircompany.name_ru + "</td><td>" + JSON.parse(response)[i].status_ru + "</td><td>" + JSON.parse(response)[i].terminal + "</td></tr>"
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+    go();
+
+    function search() {
+
+        var input, filter, tbody, tr, td1, td2, i, txtValue1, txtValue2;
+        input = document.getElementsByClassName('search')[0];
+        filter = input.value.toUpperCase();
+        tbody = document.getElementById("tbody");
+        tr = tbody.getElementsByTagName('tr');
+
+        for (i = 0; i < tr.length; i++) {
+
+            td1 = tr[i].getElementsByTagName("td")[1];
+            td2 = tr[i].getElementsByTagName("td")[2];
+
+            txtValue1 = td1.textContent || td1.innerText;
+            txtValue2 = td2.textContent || td2.innerText;
+
+            if (txtValue1.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+                console.log('txtValue1' + i);
+
+            } else if (txtValue2.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+
+                console.log('txtValue2' + i);
+
+            } else {
+
+                tr[i].style.display = "none";
+            }
+
+        }
+    }
+</script>
+
+</html>
